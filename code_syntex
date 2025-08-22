@@ -1,0 +1,86 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# load the dataset
+df=pd.read_csv(r"C:\Users\DELL\Downloads\Sales_data_.csv")
+
+#Display the first 5 rows 
+print("The first 5 Rows\n ")
+print(df.head())
+
+# The Basic information of the dataset
+print("Dataset information\n")
+print(df.info())
+
+#The Statistical Summary of numerical columns
+print("The Statistical Summary \n")
+print(df.describe())
+
+# Check for duplicate rows
+duplicates = df.duplicated().sum()
+print(f"Number of duplicate rows: {duplicates}")
+
+# Remove duplicates
+df.drop_duplicates(inplace=True)
+
+# Handle missing values
+print(f"\nMissing values before cleaning:\n{df.isnull().sum()}")
+
+# Fill missing numerical values with column mean
+df.fillna(df.mean(numeric_only=True), inplace=True)
+
+print(f"\nMissing values after cleaning:\n{df.isnull().sum()}")
+
+# Converting date column to datetime (day comes first)
+df['Date'] = pd.to_datetime(df['Date'], dayfirst=True, errors='coerce')
+
+
+# Verify after cleaning
+print("Dataset After cleaning\n")
+print(df.head())
+
+#plotting sales trends over time
+plt.figure(figsize=(12, 5))
+df.groupby("Date")['Sales'].sum().plot()
+plt.title("Sales Over Time")
+plt.xlabel("Date")
+plt.ylabel("Total Sales")
+plt.show()
+
+# Sales by Region
+plt.figure(figsize=(5, 3))
+sns.barplot(x='Region', y='Sales', data=df, estimator=sum, errorbar=None)
+plt.title("Sales by Region")
+plt.show()
+
+# Sales by Category
+plt.figure(figsize=(5, 3))
+sns.barplot(x='Category', y='Sales', data=df, estimator=sum, errorbar=None)
+plt.title("Sales by Category")
+plt.show()
+
+# Correlation Heatmap
+plt.figure(figsize=(5, 2))
+sns.heatmap(df.corr(numeric_only=True), annot=True, cmap="coolwarm")
+plt.title("Correlation Heatmap")
+plt.show()
+
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score, mean_squared_error
+X = df[['Profit', 'Discount']]
+y = df['Sales']
+
+model = LinearRegression()
+model.fit(X, y)
+
+y_pred = model.predict(X)
+
+# Evaluation
+print("\nModel Performance:\n")
+print("R² Score:\n", r2_score(y, y_pred))
+print("MSE:\n", mean_squared_error(y, y_pred))
+
+# Show coefficients
+print("\nLinear Regression Equation:\n")
+print(f"Sales = {model.intercept_:.2f} + ({model.coef_[0]:.2f} * Profit) + ({model.coef_[1]:.2f} * Discount)")
